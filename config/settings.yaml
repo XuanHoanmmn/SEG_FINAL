@@ -30,3 +30,6 @@ ranking:
 evaluation:
   top_k: 10
   query_count_target: 20
+  pool_depth: 5
+  latency_runs: 3
+  graded_relevance: true
