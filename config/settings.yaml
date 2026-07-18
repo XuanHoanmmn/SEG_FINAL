@@ -18,6 +18,10 @@ preprocessing:
 
 ranking:
   baseline: tfidf
+  advanced: bm25f
+  bm25f_k1: 1.2
+  phrase_boost: 2.0
+  proximity_boost: 1.0
   title_weight: 3.0
   ingredients_weight: 2.0
   category_weight: 1.5
@@ -26,4 +30,3 @@ ranking:
 evaluation:
   top_k: 10
   query_count_target: 20
-

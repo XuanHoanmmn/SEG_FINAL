@@ -3,7 +3,7 @@ import unittest
 from src.indexing import build_inverted_index
 from src.models import RecipeDocument
 from src.preprocessing import VietnameseTextProcessor, process_document
-from src.query import QueryProcessor
+from src.query import QueryProcessor, SearchFilters
 from src.retrieval import TfidfRetriever
 
 
@@ -94,6 +94,17 @@ class TfidfRetrieverTests(unittest.TestCase):
         self.assertEqual(retriever.search("pizza"), [])
         with self.assertRaisesRegex(ValueError, "top_k"):
             retriever.search("canh", top_k=0)
+
+    def test_applies_shared_filters(self) -> None:
+        fast = make_document("fast", title="Canh chua")
+        slow = make_document("slow", title="Canh chua cá")
+        fast.cook_time_minutes = 10
+        slow.cook_time_minutes = 60
+        retriever = make_retriever([fast, slow])
+
+        results = retriever.search("canh", filters=SearchFilters(max_time_minutes=15))
+
+        self.assertEqual([result.doc_id for result in results], ["fast"])
 
 
 if __name__ == "__main__":
