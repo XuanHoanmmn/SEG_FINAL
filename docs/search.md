@@ -28,23 +28,23 @@ Queries containing Vietnamese diacritics search the normalized lexicon. Fully ac
 
 ## Usage
 
-Interactive mode loads the index once and accepts multiple queries:
+Run the preserved TF-IDF baseline explicitly (BM25F is the newer CLI default):
 
 ```bash
-python -m src.query.search
+python -m src.query.search --ranker tfidf
 ```
 
 One query:
 
 ```bash
-python -m src.query.search "gà nướng"
-python -m src.query.search "ga nuong" --top-k 5
+python -m src.query.search "gà nướng" --ranker tfidf
+python -m src.query.search "ga nuong" --top-k 5 --ranker tfidf
 ```
 
 Machine-readable output for the later API or evaluation pipeline:
 
 ```bash
-python -m src.query.search "canh chua" --json
+python -m src.query.search "canh chua" --ranker tfidf --json
 ```
 
 Each result includes score, matched terms, matched fields and a field-level score breakdown for explainability.
