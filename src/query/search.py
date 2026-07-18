@@ -7,25 +7,46 @@ import json
 import sys
 from pathlib import Path
 from time import perf_counter
+from typing import Protocol
 
 from src.indexing import PositionalInvertedIndex
-from src.retrieval import SearchResult, TfidfRetriever
+from src.query import SearchFilters
+from src.retrieval import BM25FRetriever, SearchResult, TfidfRetriever
+
+
+class SearchBackend(Protocol):
+    def search(
+        self,
+        query: str,
+        *,
+        top_k: int = 10,
+        filters: SearchFilters | None = None,
+    ) -> list[SearchResult]: ...
 
 
 def search_once(
-    retriever: TfidfRetriever,
+    retriever: SearchBackend,
     query: str,
     *,
     top_k: int,
+    filters: SearchFilters | None = None,
 ) -> tuple[list[SearchResult], float]:
     started_at = perf_counter()
-    results = retriever.search(query, top_k=top_k)
+    results = retriever.search(query, top_k=top_k, filters=filters)
     elapsed_ms = (perf_counter() - started_at) * 1000
     return results, elapsed_ms
 
 
-def _print_results(query: str, results: list[SearchResult], elapsed_ms: float) -> None:
-    print(f'\nTruy vấn: "{query}" — {len(results)} kết quả ({elapsed_ms:.2f} ms)')
+def _print_results(
+    query: str,
+    results: list[SearchResult],
+    elapsed_ms: float,
+    ranking_model: str,
+) -> None:
+    print(
+        f'\nTruy vấn: "{query}" — {len(results)} kết quả '
+        f"({elapsed_ms:.2f} ms, {ranking_model.upper()})"
+    )
     if not results:
         print("Không tìm thấy công thức phù hợp.")
         return
@@ -46,9 +67,17 @@ def _print_results(query: str, results: list[SearchResult], elapsed_ms: float) -
         print(f"   {result.url}")
 
 
-def _print_json(query: str, results: list[SearchResult], elapsed_ms: float) -> None:
+def _print_json(
+    query: str,
+    results: list[SearchResult],
+    elapsed_ms: float,
+    ranking_model: str,
+    filters: SearchFilters,
+) -> None:
     payload = {
         "query": query,
+        "ranking_model": ranking_model,
+        "filters": filters.to_dict(),
         "elapsed_ms": round(elapsed_ms, 3),
         "total": len(results),
         "results": [result.to_dict() for result in results],
@@ -56,9 +85,16 @@ def _print_json(query: str, results: list[SearchResult], elapsed_ms: float) -> N
     print(json.dumps(payload, ensure_ascii=False, indent=2))
 
 
-def _interactive(retriever: TfidfRetriever, top_k: int) -> None:
-    print("Vietnamese Recipe Search — TF-IDF baseline")
+def _interactive(
+    retriever: SearchBackend,
+    top_k: int,
+    ranking_model: str,
+    filters: SearchFilters,
+) -> None:
+    print(f"Vietnamese Recipe Search — {ranking_model.upper()}")
     print("Nhập truy vấn; nhập 'quit' hoặc để trống để thoát.")
+    if filters.active:
+        print(f"Bộ lọc: {json.dumps(filters.to_dict(), ensure_ascii=False)}")
     while True:
         try:
             query = input("\nTìm món> ").strip()
@@ -67,8 +103,13 @@ def _interactive(retriever: TfidfRetriever, top_k: int) -> None:
             return
         if not query or query.lower() in {"exit", "q", "quit"}:
             return
-        results, elapsed_ms = search_once(retriever, query, top_k=top_k)
-        _print_results(query, results, elapsed_ms)
+        results, elapsed_ms = search_once(
+            retriever,
+            query,
+            top_k=top_k,
+            filters=filters,
+        )
+        _print_results(query, results, elapsed_ms, ranking_model)
 
 
 def _parse_args() -> argparse.Namespace:
@@ -76,8 +117,24 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("query", nargs="*", help="Query text; omit it for interactive mode.")
     parser.add_argument("--index", default="artifacts/inverted_index.json.gz")
     parser.add_argument("--top-k", type=int, default=10)
+    parser.add_argument("--ranker", choices=("bm25f", "tfidf"), default="bm25f")
+    parser.add_argument("--max-time", type=int, help="Maximum total/cooking time in minutes.")
+    parser.add_argument("--difficulty", help="Difficulty such as Dễ, Vừa or Khó.")
+    parser.add_argument("--category", action="append", default=[])
+    parser.add_argument("--ingredient", action="append", default=[])
+    parser.add_argument("--method", action="append", default=[])
     parser.add_argument("--json", action="store_true", help="Print machine-readable JSON.")
     return parser.parse_args()
+
+
+def _build_filters(args: argparse.Namespace) -> SearchFilters:
+    return SearchFilters(
+        max_time_minutes=args.max_time,
+        difficulty=args.difficulty,
+        categories=tuple(args.category),
+        ingredients=tuple(args.ingredient),
+        cooking_methods=tuple(args.method),
+    )
 
 
 def main() -> None:
@@ -93,19 +150,30 @@ def main() -> None:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
 
-    retriever = TfidfRetriever(PositionalInvertedIndex.load(index_path))
+    index = PositionalInvertedIndex.load(index_path)
+    retriever: SearchBackend
+    if args.ranker == "tfidf":
+        retriever = TfidfRetriever(index)
+    else:
+        retriever = BM25FRetriever(index)
+    filters = _build_filters(args)
     query = " ".join(args.query).strip()
     if not query:
         if args.json:
             raise SystemExit("A query is required with --json")
-        _interactive(retriever, args.top_k)
+        _interactive(retriever, args.top_k, args.ranker, filters)
         return
 
-    results, elapsed_ms = search_once(retriever, query, top_k=args.top_k)
+    results, elapsed_ms = search_once(
+        retriever,
+        query,
+        top_k=args.top_k,
+        filters=filters,
+    )
     if args.json:
-        _print_json(query, results, elapsed_ms)
+        _print_json(query, results, elapsed_ms, args.ranker, filters)
     else:
-        _print_results(query, results, elapsed_ms)
+        _print_results(query, results, elapsed_ms, args.ranker)
 
 
 if __name__ == "__main__":
