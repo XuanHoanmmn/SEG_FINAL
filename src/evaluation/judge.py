@@ -17,7 +17,6 @@ from src.evaluation import (
 from src.indexing import PositionalInvertedIndex
 from src.retrieval import BM25FRetriever, TfidfRetriever
 
-
 # These terms are used only to build a human-judging pool when the systems under
 # evaluation return nothing. The actual experiment still runs the original
 # query, so a failed lexical match remains visible in the reported metrics.
