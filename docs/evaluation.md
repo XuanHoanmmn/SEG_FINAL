@@ -22,7 +22,14 @@ For every candidate, enter:
 
 The command saves `data/ground_truth/qrels.jsonl` after every label. Running it again resumes automatically. Use `--query-id q02` to judge one query or `--rejudge` to replace previous labels.
 
-The default pool depth is five results from each ranker. If a query has no relevant document in the pool, expand it:
+The default pool depth is five results from each ranker. If both rankers return
+no candidate for a known vocabulary gap such as `hải sản`, the judging command
+uses a documented seafood-term expansion only to construct the human pool. The
+evaluation runner still executes the original query, preserving an honest zero
+when a model cannot retrieve it.
+
+If a query has candidates but no relevant document in the first pool, increase
+the pool depth:
 
 ```bash
 python -m src.evaluation.judge --query-id q19 --pool-depth 10

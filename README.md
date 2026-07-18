@@ -160,6 +160,10 @@ Sau khi mỗi query có ít nhất một tài liệu relevant, chạy:
 python -m src.evaluation.run
 ```
 
+Nếu hai ranker không trả ứng viên cho một khoảng trống từ vựng đã biết như
+`hải sản`, công cụ judge dùng các từ hải sản cụ thể để tạo pool chấm thủ công.
+Phép evaluation vẫn chạy nguyên truy vấn, nên kết quả không bị làm đẹp giả.
+
 Kết quả được ghi vào `artifacts/evaluation_report.json` và `artifacts/evaluation_results.csv`. Chi tiết quy trình nằm trong `docs/evaluation.md`.
 
 ## Các mốc tiếp theo

@@ -18,6 +18,14 @@ from src.indexing import PositionalInvertedIndex
 from src.retrieval import BM25FRetriever, TfidfRetriever
 
 
+# These terms are used only to build a human-judging pool when the systems under
+# evaluation return nothing. The actual experiment still runs the original
+# query, so a failed lexical match remains visible in the reported metrics.
+JUDGING_POOL_EXPANSIONS = {
+    "hải sản": "cá tôm mực nghêu ốc",
+}
+
+
 def pooled_document_ids(
     query: EvaluationQuery,
     tfidf: TfidfRetriever,
@@ -29,17 +37,25 @@ def pooled_document_ids(
 
     if pool_depth <= 0:
         raise ValueError("pool_depth must be positive")
-    fusion_scores: dict[str, float] = defaultdict(float)
-    best_rank: dict[str, int] = {}
-    for retriever in (tfidf, bm25f):
-        results = retriever.search(
-            query.text,
-            top_k=pool_depth,
-            filters=query.filters,
-        )
-        for rank, result in enumerate(results, start=1):
-            fusion_scores[result.doc_id] += 1.0 / (60 + rank)
-            best_rank[result.doc_id] = min(rank, best_rank.get(result.doc_id, rank))
+    def collect(query_text: str) -> tuple[dict[str, float], dict[str, int]]:
+        fusion_scores: dict[str, float] = defaultdict(float)
+        best_rank: dict[str, int] = {}
+        for retriever in (tfidf, bm25f):
+            results = retriever.search(
+                query_text,
+                top_k=pool_depth,
+                filters=query.filters,
+            )
+            for rank, result in enumerate(results, start=1):
+                fusion_scores[result.doc_id] += 1.0 / (60 + rank)
+                best_rank[result.doc_id] = min(rank, best_rank.get(result.doc_id, rank))
+        return fusion_scores, best_rank
+
+    fusion_scores, best_rank = collect(query.text)
+    if not fusion_scores:
+        expanded_text = JUDGING_POOL_EXPANSIONS.get(query.text.casefold().strip())
+        if expanded_text:
+            fusion_scores, best_rank = collect(expanded_text)
     return sorted(
         fusion_scores,
         key=lambda doc_id: (-fusion_scores[doc_id], best_rank[doc_id], doc_id),
@@ -114,6 +130,11 @@ def main() -> None:
         if not candidate_ids:
             print(f"\n{query.query_id}: không có ứng viên; hãy kiểm tra query/filter.")
             continue
+        if query.text.casefold().strip() in JUDGING_POOL_EXPANSIONS:
+            print(
+                f"\n{query.query_id}: pool dự phòng có thể dùng từ mở rộng; "
+                "evaluation vẫn chạy nguyên truy vấn."
+            )
         for position, doc_id in enumerate(candidate_ids, start=1):
             key = (query.query_id, doc_id)
             if key in judgments and not args.rejudge:
