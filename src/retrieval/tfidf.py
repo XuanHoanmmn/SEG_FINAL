@@ -36,12 +36,14 @@ class SearchResult:
     matched_terms: tuple[str, ...]
     matched_fields: tuple[str, ...]
     field_scores: dict[str, float]
+    expanded_terms: tuple[str, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
         value = asdict(self)
         value["categories"] = list(self.categories)
         value["matched_terms"] = list(self.matched_terms)
         value["matched_fields"] = list(self.matched_fields)
+        value["expanded_terms"] = list(self.expanded_terms)
         return value
 
 
@@ -110,7 +112,9 @@ class TfidfRetriever:
             if not self.index.get_postings(term, channel=query.channel):
                 continue
             idf = self.inverse_document_frequency(term, query.channel)
-            query_weights[term] = _log_term_frequency(frequency) * idf
+            query_weights[term] = (
+                _log_term_frequency(frequency) * idf * query.term_boost(term)
+            )
         if not query_weights:
             return []
 
@@ -154,6 +158,7 @@ class TfidfRetriever:
                     matched_terms=tuple(sorted(matched_terms[doc_id])),
                     matched_fields=tuple(sorted(field_scores[doc_id])),
                     field_scores=normalized_field_scores,
+                    expanded_terms=query.expanded_terms,
                 )
             )
 
