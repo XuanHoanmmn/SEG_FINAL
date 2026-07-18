@@ -1,0 +1,106 @@
+openapi: 3.1.0
+info:
+  title: SEG_FINAL Vietnamese Recipe Search API
+  version: "1.0"
+  description: Versioned backend API for the Vietnamese recipe search engine.
+servers:
+  - url: http://127.0.0.1:5000
+paths:
+  /api/v1/health:
+    get:
+      summary: Check API readiness and index statistics
+      responses:
+        "200":
+          description: API and index are ready
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, api_version, index, rankers]
+                properties:
+                  status: {type: string, const: ok}
+                  api_version: {type: string}
+                  index: {type: object}
+                  rankers:
+                    type: array
+                    items: {type: string, enum: [bm25f, tfidf]}
+  /api/v1/search:
+    get:
+      summary: Search recipes
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema: {type: string, minLength: 1}
+        - name: ranker
+          in: query
+          schema: {type: string, enum: [bm25f, tfidf], default: bm25f}
+        - name: page
+          in: query
+          schema: {type: integer, minimum: 1, default: 1}
+        - name: page_size
+          in: query
+          schema: {type: integer, minimum: 1, maximum: 50, default: 10}
+        - name: max_time
+          in: query
+          schema: {type: integer, minimum: 0}
+        - name: difficulty
+          in: query
+          schema: {type: string}
+        - name: category
+          in: query
+          schema: {type: array, items: {type: string}}
+        - name: ingredient
+          in: query
+          schema: {type: array, items: {type: string}}
+        - name: method
+          in: query
+          schema: {type: array, items: {type: string}}
+      responses:
+        "200":
+          description: Ranked, filtered and paginated search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResponse"
+        "400":
+          description: Invalid query parameter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    SearchResponse:
+      type: object
+      required: [query, pagination, facets, results, took_ms]
+      properties:
+        query: {type: object}
+        pagination: {type: object}
+        facets: {type: object}
+        results:
+          type: array
+          items: {$ref: "#/components/schemas/SearchResult"}
+        took_ms: {type: number, minimum: 0}
+    SearchResult:
+      type: object
+      required: [rank, doc_id, score, title, url, snippet, explanation]
+      properties:
+        rank: {type: integer, minimum: 1}
+        doc_id: {type: string}
+        score: {type: number}
+        title: {type: string}
+        url: {type: string, format: uri}
+        snippet: {type: object}
+        explanation: {type: object}
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: {type: string}
+            message: {type: string}
+            details: {type: object}
