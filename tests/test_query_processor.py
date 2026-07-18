@@ -1,7 +1,7 @@
 import unittest
 
 from src.preprocessing import VietnameseTextProcessor
-from src.query import QueryProcessor
+from src.query import QueryProcessor, VietnameseRecipeQueryExpander
 
 
 class QueryProcessorTests(unittest.TestCase):
@@ -30,6 +30,30 @@ class QueryProcessorTests(unittest.TestCase):
 
     def test_empty_query_has_no_terms(self) -> None:
         self.assertEqual(self.processor.process("   ").terms, ())
+
+    def test_expands_recipe_concept_with_lower_weight(self) -> None:
+        processor = QueryProcessor(
+            VietnameseTextProcessor(use_word_segmentation=False),
+            query_expander=VietnameseRecipeQueryExpander(),
+        )
+
+        query = processor.process("món hải sản")
+
+        self.assertEqual(query.terms, ("món", "hải", "sản"))
+        self.assertEqual(query.expanded_terms, ("cá", "tôm", "mực", "nghêu", "ốc"))
+        self.assertEqual(query.term_boost("hải"), 1.0)
+        self.assertEqual(query.term_boost("mực"), 0.35)
+
+    def test_expands_accentless_query_into_accentless_terms(self) -> None:
+        processor = QueryProcessor(
+            VietnameseTextProcessor(use_word_segmentation=False),
+            query_expander=VietnameseRecipeQueryExpander(),
+        )
+
+        query = processor.process("hai san")
+
+        self.assertEqual(query.channel, "accentless")
+        self.assertEqual(query.expanded_terms, ("ca", "tom", "muc", "ngheu", "oc"))
 
 
 if __name__ == "__main__":
