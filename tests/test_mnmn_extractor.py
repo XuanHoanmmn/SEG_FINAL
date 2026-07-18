@@ -23,6 +23,7 @@ class MonNgonMoiNgayExtractorTests(unittest.TestCase):
         self.assertEqual(document.cook_time_minutes, 20)
         self.assertEqual(document.servings, "4 người")
         self.assertEqual(document.difficulty, "Dễ")
+        self.assertNotIn("Thông tin dinh dưỡng", document.difficulty)
         self.assertEqual(document.cooking_method, "nướng")
         self.assertEqual(document.categories, ["Nướng"])
         self.assertEqual(document.url, "https://monngonmoingay.com/ga-nuong-chanh-sa-mayo")
@@ -64,4 +65,3 @@ class MonNgonMoiNgayExtractorTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
