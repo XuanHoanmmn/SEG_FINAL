@@ -8,7 +8,7 @@ from dataclasses import asdict, dataclass
 from typing import Any
 
 from src.indexing import PositionalInvertedIndex
-from src.query import ProcessedQuery, QueryProcessor
+from src.query import ProcessedQuery, QueryProcessor, SearchFilters
 
 DEFAULT_FIELD_WEIGHTS = {
     "title": 3.0,
@@ -65,13 +65,24 @@ class TfidfRetriever:
             for channel in ("normalized", "accentless")
         }
 
-    def search(self, query: str, *, top_k: int = 10) -> list[SearchResult]:
+    def search(
+        self,
+        query: str,
+        *,
+        top_k: int = 10,
+        filters: SearchFilters | None = None,
+    ) -> list[SearchResult]:
         if top_k <= 0:
             raise ValueError("top_k must be a positive integer")
         processed_query = self.query_processor.process(query)
         if not processed_query.terms or not self.index.documents:
             return []
-        return self._score(processed_query)[:top_k]
+        allowed_doc_ids = (filters or SearchFilters()).filter_document_ids(
+            self.index.documents
+        )
+        if not allowed_doc_ids:
+            return []
+        return self._score(processed_query, allowed_doc_ids)[:top_k]
 
     def inverse_document_frequency(self, term: str, channel: str) -> float:
         document_frequency = self.index.document_frequency(term, channel=channel)
@@ -89,7 +100,11 @@ class TfidfRetriever:
             for doc_id in self.index.documents
         }
 
-    def _score(self, query: ProcessedQuery) -> list[SearchResult]:
+    def _score(
+        self,
+        query: ProcessedQuery,
+        allowed_doc_ids: set[str],
+    ) -> list[SearchResult]:
         query_weights: dict[str, float] = {}
         for term, frequency in query.term_frequencies.items():
             if not self.index.get_postings(term, channel=query.channel):
@@ -107,6 +122,8 @@ class TfidfRetriever:
         for term, query_weight in query_weights.items():
             idf = self.inverse_document_frequency(term, query.channel)
             for posting in self.index.get_postings(term, channel=query.channel):
+                if posting.doc_id not in allowed_doc_ids:
+                    continue
                 field_weight = self.field_weights.get(posting.field, 1.0)
                 document_weight = _log_term_frequency(posting.term_frequency) * idf
                 contribution = query_weight * document_weight * field_weight
