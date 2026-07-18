@@ -210,21 +210,34 @@ def _extract_sections(root: html.HtmlElement) -> dict[str, list[str]]:
 
 def _find_labeled_value(root: html.HtmlElement, *labels: str) -> str | None:
     normalized_labels = [_normalized_label(label) for label in labels]
-    for element in root.iter():
-        if not isinstance(element.tag, str):
-            continue
-        text = _clean_text(element.text_content())
-        if not text or len(text) > 160:
-            continue
+    text_nodes = [
+        _clean_text(value)
+        for value in root.xpath("//text()[normalize-space()]")
+        if _clean_text(value)
+    ]
+
+    for index, text in enumerate(text_nodes):
         normalized = _normalized_label(text)
-        for label in normalized_labels:
+        for raw_label, label in zip(labels, normalized_labels, strict=True):
             if normalized == label:
+                for following in text_nodes[index + 1 : index + 5]:
+                    following_normalized = _normalized_label(following)
+                    if any(
+                        following_normalized == other
+                        or following_normalized.startswith(f"{other} ")
+                        for other in normalized_labels
+                    ):
+                        break
+                    if len(following) <= 80:
+                        return following
                 continue
-            if normalized.startswith(label):
-                raw_parts = text.split(":", maxsplit=1)
-                if len(raw_parts) == 2 and _clean_text(raw_parts[1]):
-                    return _clean_text(raw_parts[1])
-                return _clean_text(text[len(labels[normalized_labels.index(label)]) :]).lstrip(": ")
+
+            if normalized.startswith(f"{label} "):
+                parts = text.split(":", maxsplit=1)
+                candidate = parts[1] if len(parts) == 2 else text[len(raw_label) :]
+                candidate = _clean_text(candidate).lstrip(": ")
+                if candidate and len(candidate) <= 80:
+                    return candidate
     return None
 
 
@@ -232,7 +245,40 @@ def _extract_categories(root: html.HtmlElement) -> list[str]:
     values = root.xpath(
         "//a[@rel='tag' or contains(concat(' ', normalize-space(@class), ' '), ' tag ')]//text()"
     )
-    return deduplicate_texts(_clean_text(value) for value in values)
+    direct_categories = deduplicate_texts(_clean_text(value) for value in values)
+    if direct_categories:
+        return direct_categories
+
+    elements = list(root.iter())
+    marker_index: int | None = None
+    for index, element in enumerate(elements):
+        if not isinstance(element.tag, str):
+            continue
+        text = _clean_text(element.text_content())
+        if len(text) <= 80 and _normalized_label(text).startswith("duoc phat song tren"):
+            marker_index = index
+            break
+
+    if marker_index is None:
+        return []
+
+    semantic_categories: list[str] = []
+    for element in elements[marker_index + 1 :]:
+        if not isinstance(element.tag, str):
+            continue
+        tag = element.tag.lower()
+        text = _clean_text(element.text_content())
+        normalized = _normalized_label(text)
+        if tag in {"h1", "h2", "h3"} and normalized.startswith(
+            "cong thuc ban co the thich"
+        ):
+            break
+        if tag == "a" and text and len(text) <= 80:
+            semantic_categories.append(text)
+        if len(semantic_categories) >= 40:
+            break
+
+    return deduplicate_texts(semantic_categories)
 
 
 def _infer_cooking_method(title: str, categories: list[str]) -> str | None:
