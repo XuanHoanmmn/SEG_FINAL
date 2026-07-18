@@ -1,0 +1,29 @@
+project:
+  name: SEG_FINAL
+  domain: vietnamese_recipes
+
+crawler:
+  user_agent: SEG_FINAL-AcademicSearchProject/1.0
+  obey_robots_txt: true
+  download_delay_seconds: 1.5
+  concurrent_requests_per_domain: 2
+  request_timeout_seconds: 20
+  retry_times: 2
+
+preprocessing:
+  lowercase: true
+  unicode_form: NFC
+  create_accentless_form: true
+  remove_stopwords_for_ranking: true
+
+ranking:
+  baseline: tfidf
+  title_weight: 3.0
+  ingredients_weight: 2.0
+  category_weight: 1.5
+  content_weight: 1.0
+
+evaluation:
+  top_k: 10
+  query_count_target: 20
+
