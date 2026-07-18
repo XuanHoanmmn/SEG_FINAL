@@ -10,6 +10,7 @@ from typing import Any
 
 from src.models import RecipeDocument
 from src.preprocessing.normalizer import normalize_text, strip_accents, tokenize_basic
+from src.preprocessing.quality import sanitize_recipe_document
 
 INDEXED_FIELDS = (
     "title",
@@ -99,6 +100,9 @@ class ProcessingReport:
     output_records: int = 0
     duplicate_records: int = 0
     invalid_records: int = 0
+    cleaned_records: int = 0
+    ingredient_artifacts_removed: int = 0
+    promotional_descriptions_cleared: int = 0
 
     def to_dict(self) -> dict[str, int]:
         return asdict(self)
@@ -253,6 +257,15 @@ def process_jsonl(
             seen_ids.add(document.doc_id)
             if document.content_hash:
                 seen_hashes.add(document.content_hash)
+            document, quality_changes = sanitize_recipe_document(document)
+            if quality_changes.changed:
+                report.cleaned_records += 1
+            report.ingredient_artifacts_removed += (
+                quality_changes.ingredient_artifacts_removed
+            )
+            report.promotional_descriptions_cleared += (
+                quality_changes.promotional_descriptions_cleared
+            )
             processed = process_document(document, processor)
             target.write(json.dumps(processed.to_dict(), ensure_ascii=False) + "\n")
             report.output_records += 1

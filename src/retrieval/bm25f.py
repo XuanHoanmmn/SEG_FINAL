@@ -8,7 +8,12 @@ from dataclasses import dataclass
 
 from src.indexing import PositionalInvertedIndex
 from src.preprocessing import INDEXED_FIELDS
-from src.query import ProcessedQuery, QueryProcessor, SearchFilters
+from src.query import (
+    ProcessedQuery,
+    QueryProcessor,
+    SearchFilters,
+    VietnameseRecipeQueryExpander,
+)
 from src.retrieval.tfidf import DEFAULT_FIELD_WEIGHTS, SearchResult
 
 DEFAULT_FIELD_B = {
@@ -51,7 +56,9 @@ class BM25FRetriever:
             raise ValueError("phrase and proximity boosts cannot be negative")
 
         self.index = index
-        self.query_processor = query_processor or QueryProcessor()
+        self.query_processor = query_processor or QueryProcessor(
+            query_expander=VietnameseRecipeQueryExpander()
+        )
         self.field_weights = dict(DEFAULT_FIELD_WEIGHTS)
         self.field_b = dict(DEFAULT_FIELD_B)
         if field_weights:
@@ -131,7 +138,7 @@ class BM25FRetriever:
                 field_tf[posting.doc_id][posting.field] += component
 
             idf = self.inverse_document_frequency(term, query.channel)
-            query_weight = 1.0 + math.log(query_frequency)
+            query_weight = (1.0 + math.log(query_frequency)) * query.term_boost(term)
             for doc_id, combined_tf in weighted_tf.items():
                 term_score = (
                     idf
@@ -152,7 +159,7 @@ class BM25FRetriever:
                 allowed_doc_ids,
             )
 
-        return self._build_results(scores, field_scores, matched_terms)
+        return self._build_results(query, scores, field_scores, matched_terms)
 
     def _normalized_field_tf(self, doc_id: str, field: str, frequency: int) -> float:
         field_length = self.index.document_lengths[doc_id].get(field, 0)
@@ -219,6 +226,7 @@ class BM25FRetriever:
 
     def _build_results(
         self,
+        query: ProcessedQuery,
         scores: dict[str, float],
         field_scores: dict[str, dict[str, float]],
         matched_terms: dict[str, set[str]],
@@ -240,6 +248,7 @@ class BM25FRetriever:
                     matched_terms=tuple(sorted(matched_terms[doc_id])),
                     matched_fields=tuple(sorted(field_scores[doc_id])),
                     field_scores=dict(sorted(field_scores[doc_id].items())),
+                    expanded_terms=query.expanded_terms,
                 )
             )
         return sorted(results, key=lambda item: (-item.score, item.title, item.doc_id))

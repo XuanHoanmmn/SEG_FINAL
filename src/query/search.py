@@ -51,6 +51,9 @@ def _print_results(
         print("Không tìm thấy công thức phù hợp.")
         return
 
+    if results[0].expanded_terms:
+        print(f"Mở rộng truy vấn: {', '.join(results[0].expanded_terms)}")
+
     for rank, result in enumerate(results, start=1):
         fields = ", ".join(result.matched_fields)
         terms = ", ".join(result.matched_terms)

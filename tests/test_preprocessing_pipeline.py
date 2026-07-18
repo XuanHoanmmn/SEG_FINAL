@@ -79,6 +79,31 @@ class VietnameseTextProcessorTests(unittest.TestCase):
         self.assertEqual(report.invalid_records, 1)
         self.assertEqual(recipes[0].doc_id, "recipe-1")
 
+    def test_process_jsonl_reports_conservative_quality_cleanup(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            raw_path = Path(directory) / "raw.jsonl"
+            processed_path = Path(directory) / "processed.jsonl"
+            record = make_recipe().to_dict()
+            record["ingredients"] = ["Muỗng", "Gram", "Thịt bò 200g"]
+            record["description"] = "Gợi ý cơm nhà 3 món: Bò – Canh – Rau"
+            raw_path.write_text(
+                json.dumps(record, ensure_ascii=False) + "\n",
+                encoding="utf-8",
+            )
+
+            report = process_jsonl(
+                raw_path,
+                processed_path,
+                VietnameseTextProcessor(use_word_segmentation=False),
+            )
+            recipe = next(iter(iter_processed_jsonl(processed_path)))
+
+        self.assertEqual(report.cleaned_records, 1)
+        self.assertEqual(report.ingredient_artifacts_removed, 2)
+        self.assertEqual(report.promotional_descriptions_cleared, 1)
+        self.assertEqual(recipe.document["ingredients"], ["Thịt bò 200g"])
+        self.assertEqual(recipe.document["description"], "")
+
 
 if __name__ == "__main__":
     unittest.main()

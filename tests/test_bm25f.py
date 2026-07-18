@@ -130,6 +130,29 @@ class BM25FRetrieverTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "top_k"):
             retriever.search("canh", top_k=0)
 
+    def test_default_ranker_expands_seafood_concept_and_explains_it(self) -> None:
+        text_processor = VietnameseTextProcessor(use_word_segmentation=False)
+        recipes = [
+            process_document(
+                make_document(
+                    "seafood",
+                    title="Mực chiên giòn",
+                    ingredients=["mực ống"],
+                ),
+                text_processor,
+            ),
+            process_document(
+                make_document("chicken", title="Gà nướng", ingredients=["gà"]),
+                text_processor,
+            ),
+        ]
+        retriever = BM25FRetriever(build_inverted_index(recipes))
+
+        results = retriever.search("hải sản")
+
+        self.assertEqual(results[0].doc_id, "seafood")
+        self.assertIn("mực", results[0].expanded_terms)
+
 
 if __name__ == "__main__":
     unittest.main()
