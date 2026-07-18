@@ -24,7 +24,10 @@ class NormalizerTests(unittest.TestCase):
         self.assertEqual(forms["accentless"], "bun bo hue")
 
     def test_tokenize_basic_returns_unicode_words_and_numbers(self) -> None:
-        self.assertEqual(tokenize_basic("Gà nướng 30 phút!"), ["gà", "nướng", "30", "phút"])
+        self.assertEqual(
+            tokenize_basic("Gà nướng 30 phút!"),
+            ["gà", "nướng", "30", "phút"],
+        )
 
     def test_normalize_unicode_rejects_unknown_form(self) -> None:
         with self.assertRaisesRegex(ValueError, "Unsupported"):
