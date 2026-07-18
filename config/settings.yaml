@@ -26,6 +26,11 @@ ranking:
   ingredients_weight: 2.0
   category_weight: 1.5
   content_weight: 1.0
+  query_expansion:
+    enabled_for: bm25f
+    expansion_weight: 0.35
+    concepts:
+      hai_san: [cá, tôm, mực, nghêu, ốc]
 
 evaluation:
   top_k: 10
