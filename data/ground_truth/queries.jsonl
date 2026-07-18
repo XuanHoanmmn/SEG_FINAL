@@ -1,0 +1,20 @@
+{"filters": {}, "intent": "Tìm các công thức có nguyên liệu hoặc chủ đề về gà", "query_id": "q01", "text": "gà"}
+{"filters": {}, "intent": "Tìm đúng các món gà được chế biến bằng cách nướng", "query_id": "q02", "text": "gà nướng"}
+{"filters": {}, "intent": "Kiểm tra khả năng tìm kiếm không dấu cho món gà nướng", "query_id": "q03", "text": "ga nuong"}
+{"filters": {}, "intent": "Tìm món canh có vị chua", "query_id": "q04", "text": "canh chua"}
+{"filters": {}, "intent": "Tìm các công thức súp từ gà", "query_id": "q05", "text": "súp gà"}
+{"filters": {}, "intent": "Tìm các món salad có rong nho", "query_id": "q06", "text": "salad rong nho"}
+{"filters": {}, "intent": "Tìm công thức sử dụng đậu hũ", "query_id": "q07", "text": "đậu hũ"}
+{"filters": {}, "intent": "Tìm các món chiên", "query_id": "q08", "text": "món chiên"}
+{"filters": {}, "intent": "Tìm công thức cơm chiên", "query_id": "q09", "text": "cơm chiên"}
+{"filters": {"categories": ["Món chay"]}, "intent": "Tìm món thuộc danh mục chay", "query_id": "q10", "text": "món chay"}
+{"filters": {"categories": ["Món mặn"]}, "intent": "Tìm món thuộc danh mục món mặn", "query_id": "q11", "text": "món mặn"}
+{"filters": {"cooking_methods": ["nướng"]}, "intent": "Tìm món có phương pháp nướng", "query_id": "q12", "text": "nướng"}
+{"filters": {"categories": ["Gỏi/Trộn"]}, "intent": "Tìm món gỏi hoặc món trộn", "query_id": "q13", "text": "gỏi trộn"}
+{"filters": {"difficulty": "Dễ", "max_time_minutes": 15}, "intent": "Tìm món dễ hoàn thành trong tối đa 15 phút", "query_id": "q14", "text": "món dễ làm nhanh"}
+{"filters": {"categories": ["Bữa sáng"]}, "intent": "Tìm món phù hợp cho bữa sáng", "query_id": "q15", "text": "bữa sáng"}
+{"filters": {"categories": ["Bữa tối"]}, "intent": "Tìm món phù hợp cho bữa tối", "query_id": "q16", "text": "bữa tối"}
+{"filters": {"categories": ["Cuối tuần"]}, "intent": "Tìm món phù hợp nấu vào cuối tuần", "query_id": "q17", "text": "món cuối tuần"}
+{"filters": {}, "intent": "Tìm món có nguyên liệu rau hoặc củ", "query_id": "q18", "text": "rau củ"}
+{"filters": {}, "intent": "Tìm công thức có hải sản", "query_id": "q19", "text": "hải sản"}
+{"filters": {"categories": ["Người lớn tuổi"]}, "intent": "Tìm món được phân loại phù hợp cho người lớn tuổi", "query_id": "q20", "text": "món cho người lớn tuổi"}
