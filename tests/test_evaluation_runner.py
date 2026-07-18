@@ -43,6 +43,15 @@ def build_test_index():
             instructions=["trộn salad"],
             content_hash="hash-salad",
         ),
+        RecipeDocument(
+            doc_id="seafood",
+            title="Mực chiên giòn",
+            url="https://example.com/seafood",
+            source="example.com",
+            ingredients=["mực", "bột chiên"],
+            instructions=["chiên mực"],
+            content_hash="hash-seafood",
+        ),
     ]
     processor = VietnameseTextProcessor(use_word_segmentation=False)
     return (
@@ -66,6 +75,19 @@ class EvaluationRunnerTests(unittest.TestCase):
 
         self.assertEqual(pooled[0], "chicken")
         self.assertIn("soup", pooled)
+
+    def test_pooled_ids_expand_only_when_original_query_has_no_results(self) -> None:
+        index, processor = build_test_index()
+        query_processor = QueryProcessor(processor)
+
+        pooled = pooled_document_ids(
+            EvaluationQuery("q19", "hải sản"),
+            TfidfRetriever(index, query_processor=query_processor),
+            BM25FRetriever(index, query_processor=query_processor),
+            pool_depth=5,
+        )
+
+        self.assertIn("seafood", pooled)
 
     def test_run_evaluation_compares_both_models(self) -> None:
         index, _ = build_test_index()
