@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from src.indexing import build_inverted_index
+from src.indexing import build_corpus_profile, build_inverted_index
 from src.preprocessing import (
     VietnameseTextProcessor,
     iter_processed_jsonl,
@@ -33,6 +33,7 @@ def build_pipeline(
     report = {
         "processing": processing_report.to_dict(),
         "index": index.statistics().to_dict(),
+        "coverage": build_corpus_profile(index),
         "paths": {
             "raw": str(raw_path),
             "processed": str(processed_path),
