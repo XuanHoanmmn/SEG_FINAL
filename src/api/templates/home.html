@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Bếp Tìm — Tìm món ngon, nấu thật dễ{% endblock %}
+{% block body_class %}home-page{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero-decoration hero-decoration-one" aria-hidden="true"></div>
+  <div class="hero-decoration hero-decoration-two" aria-hidden="true"></div>
+
+  <div class="shell hero-grid">
+    <div class="hero-copy">
+      <div class="eyebrow">
+        <span class="eyebrow-dot" aria-hidden="true"></span>
+        Tìm kiếm thông minh cho căn bếp Việt
+      </div>
+      <h1>Hôm nay<br><em>ăn gì?</em></h1>
+      <p class="hero-lead">
+        Tìm đúng công thức theo món ăn, nguyên liệu hoặc cách chế biến —
+        kể cả khi bạn gõ không dấu.
+      </p>
+
+      <form class="hero-search" action="{{ url_for('search_page') }}" method="get" role="search">
+        <label class="sr-only" for="home-query">Nhập món ăn cần tìm</label>
+        <span class="search-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+        </span>
+        <input
+          id="home-query"
+          name="q"
+          type="search"
+          placeholder="Thử tìm “gà nướng”, “canh chua”..."
+          autocomplete="off"
+          required
+          autofocus
+        >
+        <button type="submit">Tìm công thức</button>
+      </form>
+
+      <div class="quick-searches" aria-label="Gợi ý tìm kiếm">
+        <span>Tìm nhanh:</span>
+        <a href="{{ url_for('search_page', q='gà nướng') }}">Gà nướng</a>
+        <a href="{{ url_for('search_page', q='canh chua') }}">Canh chua</a>
+        <a href="{{ url_for('search_page', q='món chay') }}">Món chay</a>
+        <a href="{{ url_for('search_page', q='hải sản') }}">Hải sản</a>
+      </div>
+
+      <dl class="hero-stats" aria-label="Thống kê hệ thống">
+        <div>
+          <dt>{{ document_count }}</dt>
+          <dd>Công thức đã lập chỉ mục</dd>
+        </div>
+        <div>
+          <dt>{{ vocabulary_size }}</dt>
+          <dd>Từ khóa tiếng Việt</dd>
+        </div>
+        <div>
+          <dt>2</dt>
+          <dd>Thuật toán xếp hạng</dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="hero-visual" aria-label="Minh họa kết quả tìm món ăn">
+      <div class="visual-orbit orbit-one" aria-hidden="true"></div>
+      <div class="visual-orbit orbit-two" aria-hidden="true"></div>
+      <div class="dish-card dish-card-main">
+        <div class="dish-art" aria-hidden="true">
+          <span class="bowl"></span>
+          <span class="leaf leaf-one"></span>
+          <span class="leaf leaf-two"></span>
+          <span class="ingredient ingredient-one"></span>
+          <span class="ingredient ingredient-two"></span>
+          <span class="ingredient ingredient-three"></span>
+        </div>
+        <div class="dish-card-copy">
+          <span class="result-pill">Kết quả phù hợp nhất</span>
+          <h2>Gà nướng chanh sả</h2>
+          <p>Thơm lừng · Dễ làm · Đậm vị</p>
+        </div>
+      </div>
+      <div class="floating-note note-score">
+        <span class="note-icon">01</span>
+        <span><strong>BM25F</strong><small>Xếp hạng theo độ liên quan</small></span>
+      </div>
+      <div class="floating-note note-speed">
+        <span class="pulse" aria-hidden="true"></span>
+        <span><strong>Tìm kiếm nhanh</strong><small>Inverted index tùy chỉnh</small></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="benefits" aria-labelledby="benefits-title">
+  <div class="shell">
+    <div class="section-heading">
+      <div>
+        <span class="section-kicker">Không chỉ là ô tìm kiếm</span>
+        <h2 id="benefits-title">Tìm món theo cách bạn nghĩ</h2>
+      </div>
+      <p>Bộ máy tìm kiếm được xây dựng riêng cho dữ liệu công thức tiếng Việt.</p>
+    </div>
+
+    <div class="benefit-grid">
+      <article class="benefit-card">
+        <span class="benefit-number">01</span>
+        <div class="benefit-icon benefit-icon-orange" aria-hidden="true">Aa</div>
+        <h3>Hiểu tiếng Việt</h3>
+        <p>Chuẩn hóa Unicode, tách từ và tìm được kết quả khi truy vấn không dấu.</p>
+      </article>
+      <article class="benefit-card featured">
+        <span class="benefit-number">02</span>
+        <div class="benefit-icon benefit-icon-green" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 18V9m6 9V5m6 13v-7m4 7H2"/></svg>
+        </div>
+        <h3>Xếp hạng có căn cứ</h3>
+        <p>So sánh BM25F và TF-IDF, ưu tiên tiêu đề cùng các trường quan trọng.</p>
+      </article>
+      <article class="benefit-card">
+        <span class="benefit-number">03</span>
+        <div class="benefit-icon benefit-icon-blue" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 3 4 7v5c0 5 3.4 8 8 9 4.6-1 8-4 8-9V7l-8-4Z"/><path d="m9 12 2 2 4-5"/></svg>
+        </div>
+        <h3>Minh bạch kết quả</h3>
+        <p>Xem từ khóa khớp ở đâu và điểm đóng góp của từng trường dữ liệu.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="home-cta">
+  <div class="shell cta-panel">
+    <div>
+      <span class="section-kicker">Sẵn sàng vào bếp?</span>
+      <h2>Một truy vấn, nhiều ý tưởng ngon.</h2>
+    </div>
+    <a class="button button-light" href="{{ url_for('search_page', q='món ngon') }}">
+      Khám phá công thức
+      <span aria-hidden="true">→</span>
+    </a>
+  </div>
+</section>
+{% endblock %}

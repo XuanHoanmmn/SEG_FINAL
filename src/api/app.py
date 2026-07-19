@@ -7,7 +7,7 @@ from http import HTTPStatus
 from pathlib import Path
 from typing import Any
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, render_template, request
 from werkzeug.exceptions import HTTPException
 
 from src.api.service import SearchService
@@ -91,6 +91,24 @@ def create_app(
         response.headers["X-Content-Type-Options"] = "nosniff"
         return response
 
+    @app.get("/")
+    def home_page():
+        """Render the search landing page."""
+
+        statistics = service.index.statistics().to_dict()
+        return render_template(
+            "home.html",
+            document_count=statistics["document_count"],
+            vocabulary_size=statistics["normalized_vocabulary_size"],
+        )
+
+    @app.get("/search")
+    def search_page():
+        """Render the browser search client; results are loaded from API v1."""
+
+        query = " ".join((request.args.get("q") or "").split())
+        return render_template("search.html", initial_query=query)
+
     @app.get("/api/v1")
     def api_root():
         return jsonify(
@@ -98,6 +116,7 @@ def create_app(
                 "name": "SEG_FINAL Vietnamese Recipe Search API",
                 "version": API_VERSION,
                 "endpoints": ["/api/v1/health", "/api/v1/search"],
+                "web": ["/", "/search"],
             }
         )
 

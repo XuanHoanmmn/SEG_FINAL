@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}{% if initial_query %}{{ initial_query }} — Bếp Tìm{% else %}Tìm kiếm — Bếp Tìm{% endif %}{% endblock %}
+{% block body_class %}results-page{% endblock %}
+
+{% block content %}
+<section class="search-strip">
+  <div class="shell">
+    <form class="results-search" action="{{ url_for('search_page') }}" method="get" role="search">
+      <label class="sr-only" for="results-query">Nhập món ăn cần tìm</label>
+      <span class="search-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+      </span>
+      <input
+        id="results-query"
+        name="q"
+        type="search"
+        value="{{ initial_query }}"
+        placeholder="Tên món, nguyên liệu, cách nấu..."
+        autocomplete="off"
+        required
+      >
+      <button type="submit">Tìm kiếm</button>
+      <kbd aria-label="Phím Enter">Enter ↵</kbd>
+    </form>
+  </div>
+</section>
+
+<div
+  id="search-app"
+  class="shell search-layout"
+  data-api-url="{{ url_for('search') }}"
+  data-search-url="{{ url_for('search_page') }}"
+  data-query="{{ initial_query }}"
+>
+  <button id="filter-backdrop" class="filter-backdrop" type="button" aria-label="Đóng bộ lọc"></button>
+
+  <aside id="filter-panel" class="filter-panel" aria-label="Bộ lọc tìm kiếm">
+    <div class="filter-heading">
+      <div>
+        <span class="section-kicker">Thu hẹp kết quả</span>
+        <h2>Bộ lọc</h2>
+      </div>
+      <button id="close-filters" class="icon-button mobile-only" type="button" aria-label="Đóng bộ lọc">×</button>
+    </div>
+
+    <div class="filter-group">
+      <label for="max-time">Thời gian tối đa</label>
+      <select id="max-time" name="max_time">
+        <option value="">Không giới hạn</option>
+        <option value="15">Đến 15 phút</option>
+        <option value="30">Đến 30 phút</option>
+        <option value="45">Đến 45 phút</option>
+        <option value="60">Đến 60 phút</option>
+        <option value="90">Đến 90 phút</option>
+      </select>
+    </div>
+
+    <fieldset class="filter-group">
+      <legend>Độ khó</legend>
+      <div id="difficulty-filters" class="filter-options">
+        <span class="filter-placeholder">Đang tải...</span>
+      </div>
+    </fieldset>
+
+    <fieldset class="filter-group">
+      <legend>Danh mục</legend>
+      <div id="category-filters" class="filter-options filter-options-scroll">
+        <span class="filter-placeholder">Đang tải...</span>
+      </div>
+    </fieldset>
+
+    <fieldset class="filter-group">
+      <legend>Cách chế biến</legend>
+      <div id="method-filters" class="filter-options">
+        <span class="filter-placeholder">Đang tải...</span>
+      </div>
+    </fieldset>
+
+    <button id="clear-filters" class="clear-filters" type="button">Xóa tất cả bộ lọc</button>
+  </aside>
+
+  <section class="results-column" aria-live="polite" aria-busy="true">
+    <div class="results-topbar">
+      <div>
+        <p id="result-kicker" class="result-kicker">Đang chuẩn bị kết quả</p>
+        <h1 id="result-heading">Tìm kiếm công thức</h1>
+      </div>
+      <div class="results-actions">
+        <button id="open-filters" class="button filter-button mobile-only" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10m-7 6h4"/></svg>
+          Bộ lọc
+          <span id="active-filter-count" class="filter-count" hidden>0</span>
+        </button>
+        <label class="ranker-control">
+          <span>Xếp hạng</span>
+          <select id="ranker-select" name="ranker">
+            <option value="bm25f">BM25F · Nâng cao</option>
+            <option value="tfidf">TF-IDF · Baseline</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div id="search-context" class="search-context" hidden></div>
+    <div id="active-filters" class="active-filters" aria-label="Bộ lọc đang dùng"></div>
+    <div id="search-status" class="sr-only" role="status"></div>
+    <div id="results-list" class="results-list"></div>
+    <nav id="pagination" class="pagination" aria-label="Phân trang kết quả"></nav>
+  </section>
+
+  <noscript>
+    <div class="noscript-message">Bạn cần bật JavaScript để sử dụng trang tìm kiếm này.</div>
+  </noscript>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/search.js') }}" defer></script>
+{% endblock %}
