@@ -22,6 +22,11 @@ For every candidate, enter:
 
 The command saves `data/ground_truth/qrels.jsonl` after every label. Running it again resumes automatically. Use `--query-id q02` to judge one query or `--rejudge` to replace previous labels.
 
+When the corpus is expanded, run the same command again without `--rejudge`.
+Stable document IDs allow all existing labels to be reused; only newly pooled
+query-document pairs are shown. `--rejudge` is reserved for intentionally
+correcting old labels and would otherwise create unnecessary manual work.
+
 The default pool depth is five results from each ranker. If both rankers return
 no candidate for a known vocabulary gap such as `hải sản`, the judging command
 uses a documented seafood-term expansion only to construct the human pool. The
@@ -62,3 +67,7 @@ Artifacts are generated and ignored by Git. The completed `qrels.jsonl` is sourc
 ## Methodology note
 
 Unjudged documents are treated as irrelevant, which is the normal limitation of pooled evaluation. Use the union of both rankers and increase pool depth when necessary to reduce pooling bias. Do not tune BM25F on the final judged set and then report the same set as an unbiased test; if enough judgments are available, reserve some queries for final testing.
+
+After a full crawl, regenerate `artifacts/corpus_coverage.json`, refresh the
+pooled judgments, and only then report the new retrieval metrics. This keeps a
+larger corpus from being evaluated against a stale candidate pool.

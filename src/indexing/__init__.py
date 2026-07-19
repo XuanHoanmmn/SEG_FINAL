@@ -8,6 +8,7 @@ from src.indexing.inverted_index import (
     Posting,
     build_inverted_index,
 )
+from src.indexing.profile import build_corpus_profile
 
 __all__ = [
     "INDEX_CHANNELS",
@@ -15,5 +16,6 @@ __all__ = [
     "IndexStatistics",
     "PositionalInvertedIndex",
     "Posting",
+    "build_corpus_profile",
     "build_inverted_index",
 ]
