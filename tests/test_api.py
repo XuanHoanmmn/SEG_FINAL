@@ -68,6 +68,35 @@ class SearchAPITests(unittest.TestCase):
         self.assertEqual(payload["rankers"], ["bm25f", "tfidf"])
         self.assertEqual(response.headers["X-API-Version"], "1.0")
 
+    def test_home_page_renders_search_experience_and_index_statistics(self) -> None:
+        response = self.client.get("/")
+        page = response.get_data(as_text=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Bếp Tìm", page)
+        self.assertIn("Tìm công thức", page)
+        self.assertIn(">3<", page)
+        self.assertIn("/search", page)
+
+    def test_search_page_renders_client_shell_and_escapes_query(self) -> None:
+        response = self.client.get("/search", query_string={"q": '<script>alert(1)</script>'})
+        page = response.get_data(as_text=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("search-app", page)
+        self.assertIn("/api/v1/search", page)
+        self.assertIn("&lt;script&gt;", page)
+        self.assertNotIn("<script>alert(1)</script>", page)
+
+    def test_frontend_assets_are_served_locally(self) -> None:
+        stylesheet = self.client.get("/static/css/app.css")
+        script = self.client.get("/static/js/search.js")
+
+        self.assertEqual(stylesheet.status_code, 200)
+        self.assertIn("--brand", stylesheet.get_data(as_text=True))
+        self.assertEqual(script.status_code, 200)
+        self.assertIn("appendHighlightedText", script.get_data(as_text=True))
+
     def test_search_paginates_and_returns_facets_and_explanation(self) -> None:
         response = self.client.get(
             "/api/v1/search",
