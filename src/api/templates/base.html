@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Bếp Tìm — máy tìm kiếm công thức món ăn Việt Nam.">
+  <meta name="theme-color" content="#fffaf3">
+  <title>{% block title %}Bếp Tìm{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
+
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="{{ url_for('home_page') }}" aria-label="Bếp Tìm — Trang chủ">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 44 44" role="img">
+            <path d="M10 20.5c0-6.9 5.1-12.5 12-12.5s12 5.6 12 12.5V34H10V20.5Z"/>
+            <path d="M6.5 34h31M16 8.8V5.5M28 8.8V5.5M22 7V3.5"/>
+          </svg>
+        </span>
+        <span>
+          <strong>Bếp Tìm</strong>
+          <small>Vietnamese Recipe Search</small>
+        </span>
+      </a>
+
+      <nav class="site-nav" aria-label="Điều hướng chính">
+        <a href="{{ url_for('home_page') }}">Trang chủ</a>
+        <a href="{{ url_for('search_page', q='món ngon') }}">Khám phá</a>
+        <a href="{{ url_for('api_root') }}" target="_blank" rel="noreferrer">API</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <div>
+        <strong>Bếp Tìm</strong>
+        <p>Máy tìm kiếm chuyên sâu cho công thức món ăn Việt Nam.</p>
+      </div>
+      <div class="footer-tech" aria-label="Công nghệ sử dụng">
+        <span>Flask</span>
+        <span>BM25F</span>
+        <span>TF-IDF</span>
+        <span>Inverted Index</span>
+      </div>
+    </div>
+  </footer>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>
