@@ -89,6 +89,11 @@ class PositionalInvertedIndexTests(unittest.TestCase):
 
         self.assertEqual(report["processing"]["output_records"], 2)
         self.assertEqual(report["index"]["document_count"], 2)
+        self.assertEqual(report["coverage"]["document_count"], 2)
+        self.assertEqual(
+            report["coverage"]["field_completeness"]["ingredients"]["ratio"],
+            1.0,
+        )
         self.assertEqual(len(loaded), 2)
         self.assertEqual(saved_report, report)
 
